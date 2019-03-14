@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 客户管理映射 -->
+<mapper namespace="cn.inventory.mapper.ClientMapper">
+	<!-- 查询专用Sql -->
+	<sql id="Client_Sql">
+		ID,ClientName,ClientPhone,
+		ClientAddress,ClientEmail
+	</sql>
+
+	<!-- 查询客户 -->
+	<select id="getClientList" resultType="Client">
+		SELECT
+		<include refid="Client_Sql" />
+		FROM client
+		<if test="clientName != null and clientName != ''">
+			WHERE ClientName LIKE CONCAT ('%',#{clientName},'%')
+		</if>
+	</select>
+
+	<!-- 添加客户 -->
+	<insert id="getClientAdd" parameterType="Client">
+		INSERT INTO
+		inventory.client
+		(ClientName,ClientPhone,
+		ClientAddress,ClientEmail)
+		VALUES
+		(#{clientName},#{clientPhone},
+		#{clientAddress},#{clientEmail})
+	</insert>
+
+	<!-- 修改客户 -->
+	<update id="getClientUpd" parameterType="Client">
+		UPDATE inventory.client
+		<set>
+		<if test="clientName != null and clientName != ''">ClientName =#{clientName} ,</if>
+		<if test="clientPhone != null and clientPhone != ''">ClientPhone =#{clientPhone} ,</if>
+		<if test="clientAddress != null and clientAddress != ''">ClientAddress =#{clientAddress} ,</if>
+		<if test="clientEmail != null and clientEmail != ''">ClientEmail =#{clientEmail}</if>
+		</set>
+		WHERE
+		ID=#{id}
+	</update>
+
+	<!-- 删除用户 -->
+	<delete id="getClientDel" parameterType="int">
+		DELETE FROM
+		inventory.client
+		WHERE
+		ID = #{id}
+	</delete>
+	
+	<!-- 根据id查询用户 -->
+	<select id="getClient" resultType="Client">
+		SELECT * FROM CLIENT WHERE id = #{id}
+	</select>
+</mapper>

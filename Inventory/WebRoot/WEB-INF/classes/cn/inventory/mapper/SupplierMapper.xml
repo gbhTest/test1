@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 供应商管理 映射层 -->
+<mapper namespace="cn.inventory.mapper.SupplierMapper">
+	<!-- 查询专用Sql语句 -->
+	<sql id="Supplier_Sql">
+		id,supplierCode,supplierGroup,
+		supplierName,supplierAddress,
+		supplierPhone,email
+	</sql>
+	<!-- 添加专用SQL语句 -->
+	<sql id="getSupplier_Sql">
+		supplierCode,supplierGroup,supplierName,
+		supplierAddress,supplierPhone,email
+	</sql>
+	<sql id="SupplierAdd_Sql">
+		#{supplierCode},#{supplierGroup},
+		#{supplierName},#{supplierAddress},
+		#{supplierPhone},#{email}
+	</sql>
+
+	<!-- 查询全部信息 -->
+	<select id="getSupplierList" resultType="Supplier">
+		<!-- SELECT
+		<include refid="Supplier_Sql" />
+		FROM supplier -->
+		select * from supplier
+	</select>
+
+	<!-- 添加供应商 -->
+	<insert id="getSupplierAdd" parameterType="int">
+		INSERT INTO inventory.supplier
+		(
+		<include refid="getSupplier_Sql" />
+		)
+		VALUES
+		(
+		<include refid="SupplierAdd_Sql" />
+		)
+	</insert>
+
+	<!-- 修改供应商 -->
+	<update id="getSupplierAlter" parameterType="int">
+		UPDATE
+		inventory.supplier
+		SET
+		SupplierCode= #{supplierCode} ,
+		SupplierGroup =
+		#{supplierGroup} ,
+		SupplierName =#{supplierName} ,
+		SupplierAddress =
+		#{supplierAddress} ,
+		SupplierPhone = #{supplierPhone},
+		Email = #{email}
+		WHERE
+		ID = #{id}
+	</update>
+
+	<!-- 删除供应商 -->
+	<delete id="getSupplierDel" parameterType="int">
+		DELETE FROM
+		inventory.supplier
+		WHERE
+		ID = #{id}
+	</delete>
+
+	<!-- 根据id查询供应商 -->
+	<select id="getSuppliers" resultType="Supplier">
+		SELECT * FROM supplier
+		WHERE id = #{id}
+	</select>
+	
+	<select id="getTitle" resultType="Supplier">
+		SELECT * FROM supplier
+		WHERE supplierCode = #{supplierCode}
+	</select>
+</mapper>

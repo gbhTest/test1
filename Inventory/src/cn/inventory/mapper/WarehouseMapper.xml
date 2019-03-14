@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 仓库映射层 -->
+<mapper namespace="cn.inventory.mapper.WarehouseMapper">
+	<sql id="warehouse_Sql">
+		ID,WarehouseName,WarehouseAddress,WarehousePhone,
+		WarehouseNote,WarehouseAppellative,WarehousePrincipal
+	</sql>
+	<!-- 查询仓库 -->
+	<select id="getWarehouseList" resultType="Warehouse">
+		SELECT
+		<include refid="warehouse_Sql" />
+		FROM warehouse
+	</select>
+
+	<!-- 添加仓库 -->
+	<sql id="add_sql">
+		WarehouseName,
+		WarehouseAddress,
+		WarehousePhone,
+		WarehouseNote,
+		WarehouseAppellative,
+		WarehousePrincipal
+	</sql>
+	<sql id="Sql_addwarehouse">
+		#{warehouseName},#{warehouseAddress},#{warehousePhone},
+		#{warehouseNote},#{warehouseAppellative},#{warehousePrincipal}
+	</sql>
+	<insert id="getWarehouseAdd" parameterType="Warehouse">
+		INSERT INTO inventory.warehouse
+		(
+		<include refid="add_sql" />
+		)
+		VALUES
+		(
+		<include refid="Sql_addwarehouse" />
+		)
+	</insert>
+
+	<!-- 修改仓库 -->
+	<update id="getWarehouseUpd" parameterType="Warehouse">
+		UPDATE
+		inventory.warehouse
+		<set>
+		<if test="warehouseName != null and warehouseName != ''">WarehouseName = #{warehouseName} ,</if>
+		<if test="warehouseAddress != null and warehouseAddress != ''">WarehouseAddress = #{warehouseAddress} ,</if>
+		<if test="warehousePhone != null and warehousePhone != ''">WarehousePhone =#{warehousePhone} ,</if>
+		<if test="warehouseNote != null and warehouseNote != ''">WarehouseNote = #{warehouseNote} ,</if>
+		<if test="warehouseAppellative != null and warehouseAppellative != ''">WarehouseAppellative = #{warehouseAppellative} ,</if>
+		<if test="warehousePrincipal != null and warehousePrincipal != ''">WarehousePrincipal =#{warehousePrincipal}</if>
+		</set>
+		<!-- <where>
+		<if test="id != null and id != 0">ID=#{id}</if>
+		</where> -->
+		where
+		ID = #{id}
+	</update>
+
+	<!-- 删除仓库 -->
+	<delete id="getWarehouseDel" parameterType="int">
+		DELETE FROM
+		inventory.warehouse
+		WHERE
+		ID = #{id}
+	</delete>
+	<!-- 删除仓库之前的检验 -->
+	<select id="getSelectStockMun" resultType="String">
+		SELECT stock.StockNumber FROM stock,warehouse 
+		WHERE warehouse.ID =stock.WarehouseID 
+		<if test="id != null and id != 0">AND warehouse.ID = #{id}</if> 
+	</select>
+	<!-- 根据id查询仓库 -->
+	<select id="getWarehouses" resultType="Warehouse">
+		SELECT * FROM warehouse WHERE id = #{id}
+	</select>
+</mapper>

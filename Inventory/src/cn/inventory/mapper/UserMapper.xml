@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 用户映射层操作 -->
+<mapper namespace="cn.inventory.mapper.UserMapper">
+	<!-- 用户登录方法 -->
+	<select id="getUserCound" resultType="User">
+		select * from user where userAccount = #{userAccount}
+	</select>
+<!-- 增加用户 -->
+	<insert id="inserUser" parameterType="int">
+		INSERT INTO inventory.user
+		(userSerial,userAccount,userName,
+		userPassword,userFunction,userPhone)
+		VALUES
+		(#{userSerial},#{userAccount},#{userName},
+		#{userPassword},#{userFunction},#{userPhone})
+	</insert>
+
+	<!-- 删除 -->
+	<delete id="deleteUser">
+		DELETE FROM inventory.user
+		WHERE
+		ID = #{id}
+	</delete>
+
+	<!-- 修改用户 -->
+	<update id="getupdUser" parameterType="int">
+		UPDATE inventory.user
+		SET
+		<!-- 姓名 -->
+			userName = #{userName},
+		<!-- 密码 -->
+			userPassword = #{userPassword},
+		<!-- 职位 -->
+			userFunction = #{userFunction},
+		<!-- 电话-->
+			userPhone = #{userPhone}
+		WHERE
+		id = #{id}
+	</update>
+
+	<!-- 查询用户数量 -->
+	<select id="countUser" resultType="int">
+		SELECT COUNT(1)
+		FROM user
+		WHERE 1=1
+		<if test="userName != null and userName != ''">
+			and UserName LIKE CONCAT('%',#{userName},'%')
+		</if>
+	</select>
+
+	<!-- 查询用户 -->
+	<select id="selectUser" resultType="User">
+		SELECT *
+		FROM USER
+		WHERE 1=1
+		<if test="userName != null and userName != ''">
+			and UserName LIKE CONCAT('%',#{userName},'%')
+		</if>
+		LIMIT #{from},#{pageSize}
+	</select>
+	
+	<!-- 判断 userSerial 用户编号是否唯一 -->
+	<select id="getuserSerial" resultType="User">
+		SELECT * FROM USER WHERE
+		 userSerial =#{userSerial}
+	
+	</select>
+	
+	<!-- 判断 userAccount 是否唯一 -->
+	<select id="getuserAccount" resultType="User">
+		SELECT * FROM USER WHERE userAccount  =#{userAccount}
+	</select>
+	
+	<!-- 根据id查询 -->
+	<select id="getId" resultType="User">
+		SELECT * FROM USER WHERE id=#{id}
+	</select>
+</mapper>

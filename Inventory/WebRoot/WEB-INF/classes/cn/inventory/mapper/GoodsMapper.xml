@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 创建mapper namespace指向cn.inventory.mapper.GoodsMapper -->
+<mapper namespace="cn.inventory.mapper.GoodsMapper">
+	<!-- 查询专用sql语句 -->
+	<sql id="Goods_Sql">
+		ID, GoodsName,GoodsPrice,
+		GoodsUnit,SupplierID,WarehouseID,StockID
+	</sql>
+
+	<resultMap type="Goods" id="getGoods">
+		<id property="id" column="id" />
+		<association property="supplier" javaType="Supplier">
+			<id property="id" column="s_id" />
+		</association>
+		<association property="warehouse" javaType="Warehouse">
+			<id property="id" column="w_id" />
+		</association>
+	</resultMap>
+
+	<!-- 根据商品名称查询(模糊查询) -->
+	<select id="getGoodsName" resultMap="getGoods">
+		select g.*,s.id as s_id,s.*,w.id as w_id,w.*
+		from Goods g,Supplier
+		s,warehouse w
+		where g.SupplierID = s.ID and g.WarehouseID = w.ID
+		<if test="GoodsName != null and GoodsName != ''">
+			and g.GoodsName like concat ('%',#{GoodsName},'%')
+		</if>
+	</select>
+
+	<!-- 修改商品 -->
+	<update id="updateGoods" parameterType="Goods">
+		UPDATE goods
+		<set>
+			<if test="goodsName != null and goodsName != ''">goodsName = #{goodsName},</if>
+			<if test="goodsPrice !=0 and goodsPrice !=null">goodsPrice = #{goodsPrice},</if>
+			<if test="goodsUnit != null and goodsUnit != ''">goodsUnit = #{goodsUnit},</if>
+			<if test="supplierId != null and supplierId != 0">supplierID = #{supplierId},</if>
+			<if test="warehouseId != null and warehouseId != 0">warehouseID = #{warehouseId}</if>
+		</set>
+		WHERE
+		ID = #{id}
+	</update>
+
+	<!-- 根据id查询单个商品 -->
+	<select id="gooGoods" resultType="Goods">
+		SELECT
+		ID,
+		GoodsName,
+		GoodsPrice,
+		GoodsUnit,
+		SupplierID,
+		WarehouseID
+		FROM goods WHERE id = #{id}
+	</select>
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 创建mapper namespace指向cn.inventory.mapper.OrderCargoMapper -->
+<mapper namespace="cn.inventory.mapper.OrderCargoMapper">
+	<!-- 入库退货先给进货订单改为退货订单 -->
+	<update id="getModification" parameterType="int">
+		UPDATE
+		inventory.ordercargo
+		SET
+		IsOrderRefundCargo = #{IsOrderRefundCargo}
+		WHERE
+		ID = #{id}
+	</update>
+	<!-- 入库结账 -->
+	<update id="getPayment" parameterType="int">
+		UPDATE
+		inventory.ordercargo
+		SET IsOrderCargoPayment = #{IsOrderCargoPayment}
+		WHERE ID = #{id}
+	</update>
+	<!-- 入库退货结账 -->
+	<update id="getReturns" parameterType="int">
+		UPDATE
+		inventory.ordercargo
+		SET IsOrderRefundCargo = #{IsOrderRefundCargo}
+		WHERE
+		IsOrderCargoPayment = 1 AND ID = #{id}
+	</update>
+
+
+	<!-- 供应商来往账查询 -->
+	<resultMap type="OrderCargo" id="cargo">
+		<id property="id" column="id" />
+		<association property="supplier" javaType="Supplier">
+			<id property="id" column="s_id" />
+		</association>
+	</resultMap>
+	<select id="selectOrder" resultMap="cargo">
+		SELECT o.*,s.id as s_id,s.*
+		FROM ordercargo o,supplier s
+		WHERE
+		o.supplierid = s.id
+		<if test="name != null and name !=''">
+			AND s.supplierName=#{name}
+		</if>
+	</select>
+
+	<!-- 根据id查询 -->
+	<select id="getOrder" resultType="OrderCargo">
+		SELECT *
+		FROM
+		ordercargo
+		WHERE id
+		= #{id}
+	</select>
+	<!--显示供应商往来账 (IsOrderRefundCargo=0不为退货订单,IsOrderCargoPayment=1,已付款) -->
+	<!--供应商往来账查询 -->
+	<select id="getSupplierList" resultType="OrderCargo">
+		SELECT o.*,s.SupplierName
+		FROM ordercargo o LEFT JOIN supplier s ON s.ID=o.SupplierID
+		<where>
+			<if test="orderCargoName != null and orderCargoName !=''">
+				o.OrderCargoName LIKE CONCAT ('%',#{orderCargoName},'%')
+			</if>
+			<if test="isOrderCargoPayment != null">
+				AND o.IsOrderCargoPayment=#{isOrderCargoPayment}
+			</if>
+		</where>
+	</select>
+	<select id="getSupplierCount" resultType="Int">
+		SELECT COUNT(1)
+		FROM ordercargo o LEFT JOIN supplier s ON s.ID=o.SupplierID
+
+		<where>
+			<if test="orderCargoName != null and orderCargoName !=''">
+				o.OrderCargoName LIKE CONCAT ('%',#{orderCargoName},'%')
+			</if>
+			<if test="isOrderCargoPayment != null">
+				AND o.IsOrderCargoPayment=#{isOrderCargoPayment}
+			</if>
+		</where>
+	</select>
+	<!--成交总金额 -->
+	<select id="getSum" resultType="double">
+		SELECT SUM(OrderCargoTotalPrice)
+		FROM ordercargo
+		WHERE IsOrderCargoPayment=1
+	</select>
+	<select id="getCount" resultType="Int">
+		SELECT COUNT(1) FROM ordercargo
+		WHERE IsOrderRefundCargo=0
+	</select>
+
+	<!-- 新增采购订单 -->
+	<insert id="addOrderCargo">
+		INSERT INTO ordercargo
+		(OrderCargoCode,SupplierID,OrderCargoCategory, OrderCargoName,
+		OrderCargoNumber, OrderCargoUnit,OrderCargoUnitPrice,OrderCargoTotalPrice,
+		UserID,OrderCargoDate,IsOrderRefundCargo,IsOrderCargoPayment)
+		VALUES
+		(#{orderCargoCode},#{supplierId},#{orderCargoCategory},#{orderCargoName},
+		#{orderCargoNumber},#{orderCargoUnit},#{orderCargoUnitPrice},#{orderCargoTotalPrice},
+		#{userId}, #{orderCargoDate},#{isOrderRefundCargo},
+		#{isOrderCargoPayment})
+	</insert>
+	<!-- 更新数据库 -->
+	<update id="payFor">
+		UPDATE ordercargo SET
+		IsOrderCargoPayment = 1
+		<where>
+			<if test="id != null and id != 0">ID = #{id}</if>
+		</where>
+	</update>
+</mapper>

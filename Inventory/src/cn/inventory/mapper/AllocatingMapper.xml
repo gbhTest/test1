@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 调货管理Xml文件 -->
+<!-- 创建mapper namespace指向cn.inventory.mapper.AllocatingMapper -->
+<mapper namespace="cn.inventory.mapper.AllocatingMapper">
+	<!-- 调货登记 -->
+	<insert id="getAdd" parameterType="int">
+		INSERT INTO
+		inventory.allocating
+		(AllocatingName,AllocatingPhone,
+		CalloutWarehouseName,FoldWarehouseName,
+		CalloutWarehouse,FoldWarehouse,
+		CalloutData,FoldData)
+		VALUES
+		(#{allocatingName},#{allocatingPhone},
+		#{calloutWarehouseName},#{foldWarehouseName},
+		#{calloutWarehouse},#{foldWarehouse},
+		#{calloutData},#{foldData})
+	</insert>
+	<!-- 调货查询 -->
+	<resultMap type="Allacoting" id="getRegisterMap">
+		<id property="id" column="id" />
+		<result property="allocatingName" column="AllocatingName" />
+		<association property="warehouse" javaType="Warehouse">
+			<id property="id" column="id" />
+			<result property="warehousePrincipal" column="WarehousePrincipal" />
+		</association>
+		<association property="stock" javaType="Stock">
+			<id property="id" column="id" />
+			<result property="stockNumber" column="StockNumber" />
+		</association>
+		<association property="orderCargo" javaType="OrderCargo">
+			<id property="id" column="id" />
+			<result property="orderCargoName" column="OrderCargoName" />
+		</association>
+	</resultMap>
+	<select id="getRegister" resultMap="getRegisterMap"><!-- AND allocating.AllocatingName 
+			= warehouse.WarehousePrincipal -->
+		SELECT allocating.*,ordercargo.*,stock.stockNumber
+		FROM
+		warehouse,stock,allocating,ordercargo
+		WHERE warehouse.ID =
+		stock.WarehouseID AND ordercargo.ID = stock.OrderCargoID AND
+		allocating.AllocatingName = warehouse.WarehousePrincipal
+		<if test="AllocatingName != null and AllocatingName != ''">AND AllocatingName LIKE CONCAT ('%',#{AllocatingName},'%')
+		</if>
+	</select>
+	<!-- 更新库存量 -->
+	<!-- 如果是调入仓库则，添加库存 -->
+	<update id="addStock">
+		update warehouse,allocating,stock
+		SET stock.StockNumber = stock.StockNumber + #{stockNumber}
+		WHERE stock.WarehouseID = warehouse.ID AND
+		warehouse.ID = #{id}
+	</update>
+	<!-- 如果是调出仓库则减少库存 -->
+	<update id="delStock">
+		update warehouse,allocating,stock
+		SET stock.StockNumber = 0
+		WHERE stock.WarehouseID = warehouse.ID AND
+		warehouse.ID = #{id}
+	</update>
+	<!-- 按照被调仓库的信息 -->
+	<select id="getWarehouse" resultMap="getRegisterMap"><!-- WHERE warehouse.ID = stock.WarehouseID 
+			AND allocating.AllocatingName = warehouse.WarehousePrincipal -->
+		SELECT * FROM warehouse,stock<!-- allocating, -->
+		WHERE warehouse.ID = stock.WarehouseID
+		<if test="CalloutWarehouse != null and CalloutWarehouse != ''">AND warehouse.ID =#{CalloutWarehouse} </if>
+		<if test="FoldWarehouse != null and FoldWarehouse != ''">AND warehouse.ID =#{FoldWarehouse}</if>
+	</select>
+</mapper>

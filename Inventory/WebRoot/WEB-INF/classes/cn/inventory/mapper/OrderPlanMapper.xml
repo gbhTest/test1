@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.inventory.mapper.OrderPlanMapper">
+	<!-- 增加 -->
+	<insert id="insertOrder">
+		INSERT INTO orderplan
+		(
+		orderPlanName,orderPlanNumber,orderPlanUnit,
+		supplierID,orderPlanDate,isOrderPlanApproval)
+		VALUES
+		(
+		#{orderPlanName},#{orderPlanNumber},#{orderPlanUnit},
+		#{supplierId},NOW(),0)
+	</insert>
+
+	<!-- 删除 -->
+	<delete id="deleteOrder">
+		DELETE FROM orderplan
+		WHERE
+		ID = #{id}
+	</delete>
+
+	<!-- 修改 -->
+	<update id="updateOrder">
+		UPDATE orderplan
+		SET
+		orderPlanName = #{orderPlanName},
+		orderPlanNumber = #{orderPlanNumber},
+		orderPlanUnit = #{orderPlanUnit},
+		supplierID = #{supplierId}
+		WHERE
+		ID = #{id}
+	</update>
+
+	<update id="updateIs" parameterType="int">
+		UPDATE inventory.orderplan
+		SET
+		IsOrderPlanApproval = 1
+		WHERE
+		ID = #{id}
+	</update>
+
+	<!-- 查询 -->
+	<select id="selectOrder" resultType="OrderPlan">
+		SELECT id,
+		orderPlanName,
+		orderPlanNumber,
+		orderPlanUnit,
+		supplierID,
+		orderPlanDate,
+		isOrderPlanApproval
+
+		FROM
+		inventory.orderplan
+		WHERE 1=1
+		<if test="isOrderPlanApproval != null">
+			and isOrderPlanApproval = #{isOrderPlanApproval}
+		</if>
+
+	</select>
+
+	<!-- 根据id查询单个商品 -->
+	<select id="getOrderPlans" resultType="OrderPlan">
+		SELECT
+		o.*,s.id,s.supplierGroup FROM supplier s,orderplan o
+		WHERE s.id =
+		o.supplierID AND
+		o.id = #{id}
+	</select>
+
+	<!-- 查询供应商 -->
+	<select id="getSupplier" resultType="Supplier">
+		select * from supplier
+	</select>
+	
+	
+	<!-- 订单计划表和商品信息表联合查询 -->
+	<select id="getOrderPlan" resultMap="OrderPlanAndGoods">
+		SELECT *
+		FROM orderplan
+		<where>
+		<if test="id != null and id != 0">ID = #{id}</if>
+		</where>
+	</select>
+	<resultMap type="OrderPlan" id="OrderPlanAndGoods">
+	<id property="id" column="ID"/>
+	<result property="goodsPrice" column="GoodsPrice"/>
+	</resultMap>
+</mapper>

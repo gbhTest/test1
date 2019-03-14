@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 创建mapper namespace指向cn.inventory.mapper.StockMapper -->
+<mapper namespace="cn.inventory.mapper.StockMapper">
+	<!-- 入库登记 -->
+	<insert id="getRegister">
+		INSERT INTO
+		inventory.stock
+		(OrderCargoID,StockNumber,WarehouseID,StockDate)
+		VALUES
+		(#{orderCargoID},#{stockNumber},#{warehouseId},#{stockDate})
+	</insert>
+	<!-- 入库退货 删除库存记录 -->
+	<delete id="getCancel" parameterType="int">
+		DELETE FROM inventory.stock
+		WHERE
+		OrderCargoID =
+		#{OrderCargoID}
+	</delete>
+	<!-- 入库退货之后去修改订单是否为退货订单 -->
+	<update id="updateIsRefund">
+		UPDATE stock,ordercargo SET ordercargo.IsOrderRefundCargo = 1 WHERE
+		stock.OrderCargoID = ordercargo.ID AND stock.OrderCargoID =
+		#{OrderCargoID}
+	</update>
+	<!-- 入库查询 入库退货查询 -->
+	<select id="getQuery" resultMap="stockAndOrdercargo">
+		SELECT
+		s.*,o.IsOrderRefundCargo,o.OrderCargoName,o.OrderCargoUnitPrice,o.IsOrderCargoPayment,o.ID
+		as oid
+		FROM ordercargo o LEFT JOIN stock s ON o.ID = s.OrderCargoID
+		<where>
+			<if test=" IsOrderRefundCargo !=0 and IsOrderRefundCargo !=null">
+				AND o.IsOrderRefundCargo = #{IsOrderRefundCargo}
+			</if>
+			<if test=" StockNumber !=0 and StockNumber !=null">
+				AND s.StockNumber = #{StockNumber}
+			</if>
+			<if test=" StockDate !='' and StockDate !=null">
+				AND s.StockDate = #{StockDate}
+			</if>
+		</where>
+	</select>
+	<!-- stock和orderCargo表关联查询时所用到的关联关系 -->
+	<resultMap type="Stock" id="stockAndOrdercargo">
+		<id property="id" column="ID" />
+		<result property="orderCargoID" column="OrderCargoID" />
+		<result property="stockDate" column="StockDate" />
+		<result property="stockNumber" column="StockNumber" />
+		<result property="warehouseId" column="WarehouseId" />
+		<association property="orderCargo" javaType="OrderCargo">
+			<id property="id" column="oid" />
+			<result property="orderCargoName" column="OrderCargoName" />
+			<result property="orderCargoCode" column="OrderCargoCode" />
+			<result property="isOrderRefundCargo" column="IsOrderRefundCargo" />
+			<result property="orderCargoUnitPrice" column="OrderCargoUnitPrice" />
+			<result property="orderCargoNumber" column="OrderCargoNumber" />
+		</association>
+	</resultMap>
+
+	<!-- 库存盘点和查询 -->
+	<select id="getStockList" resultMap="stockAndOrdercargo">
+		SELECT k.*,g.* FROM stock k ,ordercargo g
+		WHERE k.OrderCargoID = g.ID
+		<if test="OrderCargoID !=null and OrderCargoID !=0">
+			AND k.OrderCargoID = ${OrderCargoID}
+		</if>
+		<if test="OrderCargoName !=null and OrderCargoName !=''">
+			AND g.OrderCargoName LIKE CONCAT
+			('%',#{OrderCargoName},'%')
+		</if>
+
+	</select>
+
+	<!-- 从stock表查询OrderCargoId -->
+	<select id="getStockByOrderCargoId" resultMap="stockAndOrdercargo">
+		SELECT s.*,o.IsOrderRefundCargo,o.OrderCargoName,o.ID as
+		oid,o.SupplierID,o.OrderCargoUnit,o.UserID,o.OrderCargoUnitPrice,o.OrderCargoNumber
+		FROM ordercargo o LEFT JOIN stock s ON o.ID = s.OrderCargoID
+		<where>
+			<if test="id != null and id != 0">AND o.ID = #{id}</if>
+		</where>
+	</select>
+
+	<!--获取库存量低于1000(预警) -->
+	<select id="getStockNumberCount" resultType="int">
+		SELECT COUNT(1)
+		FROM stock
+		s,ordercargo o,warehouse w
+		WHERE s.OrderCargoID=o.ID AND
+		o.IsOrderRefundCargo=0 AND
+		o.IsOrderCargoPayment=1 AND
+		s.StockNumber &lt;1000 AND s.WarehouseID=w.ID
+	</select>
+	<!--获取预警相关商品的信息 -->
+	<select id="getStockCount" resultMap="stocklsit">
+		SELECT o.OrderCargoName
+		oName,s.StockNumber,w.WarehouseAppellative wName
+		FROM stock
+		s,ordercargo o,warehouse w
+		WHERE s.OrderCargoID=o.ID AND
+		o.IsOrderRefundCargo=0 AND
+		o.IsOrderCargoPayment=1 AND
+		s.StockNumber &lt;1000 AND s.WarehouseID=w.ID
+	</select>
+
+	<resultMap type="Stock" id="stocklsit">
+		<result property="id" column="ID" />
+		<result property="stockNumber" column="StockNumber" />
+		<result property="warehouseId" column="WarehouseID" />
+		<result property="stockDate" column="StockDate" />
+		<result property="orderCargoID" column="OrderCargoID" />
+		<result property="orderCargoName" column="oName" />
+		<result property="warehouseAppellative" column="wName" />
+	</resultMap>
+</mapper>

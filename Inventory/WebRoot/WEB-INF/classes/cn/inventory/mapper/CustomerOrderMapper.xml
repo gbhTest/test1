@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 客户订单（销售模块）Xml文件 -->
+<!-- 创建mapper namespace指向cn.inventory.mapper.OrderCargoMapper -->
+<mapper namespace="cn.inventory.mapper.CustomerOrderMapper">
+
+	<resultMap type="CustomerOrder" id="order">
+		<id property="id" column="id" />
+		<association property="client" javaType="Client">
+			<id property="id" column="cl_id" />
+		</association>
+	</resultMap>
+
+	<!-- 销售查询 -->
+	<select id="getLogin" resultMap="order">
+		SELECT cu.*,cl.*,cl.id as cl_id
+		FROM customerorder cu,client cl
+		WHERE
+		cu.ClientID = cl.id
+		<if test="clientName !=null and clientName != ''">
+			AND cl.ClientName = ${clientName}
+		</if>
+		<if test="isCustomerOrderPrice !=null">
+			AND cu.IsCustomerOrderPrice = ${isCustomerOrderPrice}
+		</if>
+	</select>
+
+	<!--从此处开始修改 -->
+	<!--客户往来账、根据是否付款查询 -->
+	<select id="getCusttomerOrderList" resultType="CustomerOrder">
+		SELECT co.*,g.GoodsName,c.ClientName
+		FROM customerorder co INNER JOIN goods g ON g.ID=co.GoodsID LEFT JOIN `client` c ON co.ClientID=c.ID
+		<where>
+			<if test="isCustomerOrderPrice != null and isCustomerOrderPrice != -1">
+				co.IsCustomerOrderPrice=#{isCustomerOrderPrice}
+			</if>
+		</where>
+		
+	</select>
+	<select id="getCusttomerOrderCount" resultType="Int">
+		SELECT COUNT(1)
+		FROM customerorder co INNER JOIN goods g ON g.ID=co.GoodsID LEFT JOIN `client` c ON co.ClientID=c.ID
+		<where>
+			<if test="isCustomerOrderPrice != null and isCustomerOrderPrice != -1">
+				co.IsCustomerOrderPrice=#{isCustomerOrderPrice}
+			</if>
+		</where>
+	</select>
+	<select id="getSum" resultType="double">
+		SELECT
+		SUM(CustomerOrderTotalPrice)
+		FROM customerorder
+		WHERE
+		IsCustomerOrderPrice=1
+	</select>
+	<select id="getCount" resultType="Int">
+		SELECT COUNT(1)
+		FROM
+		customerorder
+		WHERE IsCustomerOrderRefund=0
+	</select>
+
+	<!-- 曲线图 -->
+	<select id="queryAllByDate" resultType="CustomerOrder">
+		SELECT DATE_FORMAT(CustomerOrderDate,'%Y-%m-%d') AS
+		CustomerOrderDate,COUNT(*) AS
+		`count`
+		FROM customerorder
+		WHERE 1=1
+		<if test="end != null and start != null">
+			and CustomerOrderDate BETWEEN #{start} AND #{end}
+		</if>
+		GROUP BY CustomerOrderDate
+		ORDER BY CustomerOrderDate ASC
+	</select>
+
+	<!-- 对商品销售记录查询 -->
+	<select id="getCustomerOrder" resultMap="getGoodsSaleNum">
+		SELECT
+		g.ID,g.GoodsName,c.GoodsID,SUM(c.CustomerOrderNumber) AS sum
+		FROM
+		customerorder c,goods g
+		WHERE c.GoodsID = g.ID GROUP BY c.GoodsID
+		ORDER
+		BY SUM(c.CustomerOrderNumber) DESC
+		LIMIT 0,5
+	</select>
+	<resultMap type="CustomerOrder" id="getGoodsSaleNum">
+		<id property="id" column="ID" />
+		<result property="goodsId" column="GoodsID" />
+		<result property="goodsSaleNum" column="sum" />
+		<result property="customerOrderNumber" column="CustomerOrderNumber" />
+		<association property="goods" javaType="Goods">
+			<id property="id" column="ID" />
+			<result property="goodsName" column="GoodsName" />
+		</association>
+	</resultMap>
+</mapper>
